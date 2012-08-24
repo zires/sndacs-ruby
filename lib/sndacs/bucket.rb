@@ -5,7 +5,7 @@ module Sndacs
     include Proxies
     extend Forwardable
 
-    attr_reader :name, :location, :service
+    attr_reader :name, :location, :service, :policy
 
     def_instance_delegators :service, :service_request
     private_class_method :new
@@ -31,6 +31,12 @@ module Sndacs
       return @location if defined?(@location) and not reload
 
       @location = location_constraint
+    end
+
+    def policy(reload = false)
+      return @policy if defined?(@policy) and not reload
+
+      @policy = get_policy
     end
 
     # Saves the newly built bucket. Raises Sndacs::Error::BucketAlreadyExists
@@ -126,7 +132,7 @@ module Sndacs
 
     def create_bucket_configuration(options = {})
       location = options[:location].to_s.downcase if options[:location]
-      
+
       options[:headers] ||= {}
       if location and location != REGION_DEFAULT
         options[:headers][:content_type] = "application/xml"
@@ -175,6 +181,13 @@ module Sndacs
       parse_location_constraint(response.body)
     end
 
+    def get_policy
+      response = bucket_request(:get, :params => {:policy => nil})
+      parse_policy(response.body)
+    rescue Error::ResponseError => e
+      nil
+    end
+
     def delete_bucket
       bucket_request(:delete)
     end
@@ -219,7 +232,6 @@ module Sndacs
 
     def bucket_request(method, options = {})
       path = "#{path_prefix}#{options[:path]}"
-
       service_request(method, options.merge(:host => host, :path => path))
     end
   end

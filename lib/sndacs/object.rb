@@ -102,7 +102,7 @@ module Sndacs
     # Returns Object's URL using protocol specified in service,
     # e.g. <tt>http://storage.grandcloud.cn/bucket/key/file.extension</tt>
     def url
-      URI.escape("#{protocol}#{host}/#{path_prefix}#{key}")
+      URI.escape("#{protocol}#{host(bucket.policy == 'Allow')}/#{path_prefix}#{key}")
     end
 
     # Returns Object's CNAME URL (without <tt>storage.grandcloud.cn</tt>

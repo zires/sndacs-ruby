@@ -107,7 +107,7 @@ module Sndacs
     # String -- containing all parameters joined in one params string,
     # i.e. <tt>param1=val&param2&param3=0</tt>
     def self.parse_params(params)
-      interesting_keys = [:max_keys, :prefix, :marker, :delimiter, :location]
+      interesting_keys = [:max_keys, :prefix, :marker, :delimiter, :location, :policy]
 
       result = []
       params.each do |key, value|

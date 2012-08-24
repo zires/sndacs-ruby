@@ -72,6 +72,16 @@ module Sndacs
     def parse_is_truncated xml
       rexml_document(xml).elements["ListBucketResult/IsTruncated"].text =='true'
     end
+
+    def parse_policy(content)
+      result = JSON.parse(content)
+      policy = result["Statement"][0]["Effect"]
+      if policy.nil? || policy == ''
+        policy = 'Deny'
+      end
+
+      policy
+    end
   end
 
 end
