@@ -6,52 +6,43 @@ module Sndacs
   class Config
 
     class << self
-      attr_accessor :access_key_id
-      attr_accessor :secret_access_key
+      
+      DEFAULT_HOST = 'storage.grandcloud.cn'
+      DEFAULT_CONTENT_HOST = 'storage.sdcloud.cn'
 
-      attr_accessor :proxy
-      attr_accessor :host
-      attr_accessor :content_host
-      attr_accessor :timeout
-      attr_accessor :use_ssl
-      attr_accessor :chunk_size
-      attr_accessor :debug
+      attr_writer :access_key_id, :secret_access_key, :host, :content_host, :timeout, :chunk_size
+
+      attr_accessor :proxy, :debug, :use_ssl
 
       def access_key_id
-        @access_key_id ||= ''
+        @access_key_id || ''
       end
 
       def secret_access_key
-        @secret_access_key ||= ''
-      end
-
-      def proxy
-        @proxy ||= nil
+        @secret_access_key || ''
       end
 
       def host
-        @host ||= 'storage.grandcloud.cn'
+        @host || DEFAULT_HOST
       end
 
       def content_host
-        @content_host ||= 'storage.sdcloud.cn'
+        @content_host || DEFAULT_CONTENT_HOST
       end
 
       def timeout
-        @timeout ||= 60
-      end
-
-      def use_ssl
-        @use_ssl ||= false
+        @timeout || 60
       end
 
       def chunk_size
-        @chunk_size ||= 1048576
+        @chunk_size || 1048576
       end
 
-      def debug
-        @debug ||= false
+      # Sndacs::Config.init({ :access_key_id => '' })
+      def init(options = {})
+        options.each{ |k,v| send "#{k}=", v }
       end
+
     end
 
   end
