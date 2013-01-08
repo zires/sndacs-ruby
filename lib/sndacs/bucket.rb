@@ -46,7 +46,7 @@ module Sndacs
     # * <tt>:location</tt> - location of the bucket
     #   (<tt>huabei-1</tt> or <tt>huadong-1</tt>)
     # * Any other options are passed through to Connection#request
-    def save(options = {})
+    def save(options = { :location => 'huabei-1'})
       if options
         if options.is_a?(String) && options.strip != ''
           options = {:location => options.strip}
@@ -54,6 +54,10 @@ module Sndacs
 
         if options.is_a?(Hash) && !options.has_key?(:location)
           options.merge!(:location => location)
+        end
+        
+        if options.is_a?(Hash) && options.has_key?(:location)
+           @location = options[:location]
         end
       else
         options = {:location => location}
@@ -63,6 +67,32 @@ module Sndacs
 
       true
     end
+
+    # Set bucket policy for the given bucket
+    def put_bucket_policy(bucket_policy)
+        if bucket_policy && bucket_policy.is_a?(String) && bucket_policy.strip != ''
+             bucket_request(:put,:body => bucket_policy,:subresource=>"policy")
+             true
+        else  
+            false
+        end
+    end
+    
+    # Delete the policy of the given bucket
+    # exception if the bucket do not have a bucket policy 
+    def delete_bucket_policy()
+        bucket_request(:delete,:subresource=>"policy")
+        true
+    end
+
+    # Get the bucket policy of the given bucket
+    # exception if the bucket do not have a bucket policy
+    def get_bucket_policy()
+        response = bucket_request(:get,:subresource=>"policy")
+        #puts response.body
+        response.body
+    end
+
 
     # Destroys given bucket. Raises an Sndacs::Error::BucketNotEmpty
     # exception if the bucket is not empty.
@@ -134,7 +164,7 @@ module Sndacs
       location = options[:location].to_s.downcase if options[:location]
 
       options[:headers] ||= {}
-      if location and location != REGION_DEFAULT
+      if location #and location != REGION_DEFAULT
         options[:headers][:content_type] = "application/xml"
         options[:body] = "<CreateBucketConfiguration><LocationConstraint>#{location}</LocationConstraint></CreateBucketConfiguration>"
       end
