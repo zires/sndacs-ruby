@@ -40,7 +40,7 @@ module Sndacs
 
       # Sndacs::Config.init({ :access_key_id => '' })
       def init(options = {})
-        options.each{ |k,v| send "#{k}=", v }
+        options.each{ |k,v| send("#{k}=", v) rescue nil }
       end
 
     end
