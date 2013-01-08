@@ -41,10 +41,39 @@ or use even more flexible config style
     #=> [#<Sndacs::Bucket:first-bucket>,
     #    #<Sndacs::Bucket:second-bucket>]
 
+=== Create bucket
+
+create a bucket to default location(huabei-1)
+    new_bucket = service.buckets.build("rubybucketdefault")
+    new_bucket.save
+
+create a bucket to specify location,location can be 'huadong-1' or 'huabei-1' ,default to huabei-1
+    new_bucket = service.buckets.build("rubybuckethuadong-1")
+    new_bucket.save(:location=>"huadong-1")
+
 === Find bucket
 
     first_bucket = service.buckets.find("first-bucket")
     #=> #<Sndacs::Bucket:first-bucket>
+
+=== Get bucket's location
+    
+    first_bucket.location
+
+==== Set bucket policy
+     
+set bucket public 
+     bucket_policy = '{"Id":"b32c9be8-2414-d0ed-a19f-e0b3f37db5fc","Statement":[{"Sid":"public-get-object","Effect":"Allow","Action":"storage:GetObject","Resource":"srn:snda:storage:::'+first_bucket.name+'/*"}]}'
+     first_bucket.put_bucket_policy(bucket_policy)
+ 
+
+==== Get bucket policy
+
+     bucket_policy = first_bucket.get_bucket_policy
+
+==== Delete bucket policy
+
+     first_bucket.delete_bucket_policy
 
 === List objects in a bucket
 
@@ -67,6 +96,17 @@ or use even more flexible config style
     object.content
     #=> "\x89PNG\r\n\x1A\n\x00\x00\x00\rIHDR\x00..."
 
+=== Get A temporary url to an object
+
+Get a temporary url to the object that expires on the timestamp given.Defaults to 1hour expire time
+    object.temporary_url( Time.now + 60 )
+
+=== Get url to a public accessible object
+
+Get a url to a public accessible object,the url only work when the object is public accessible
+    
+     object.url( public_accessible = true)
+   
 === Delete an object
 
     object.destroy
@@ -81,6 +121,32 @@ or use even more flexible config style
 
     new_object.save
     #=> true
+
+create an object with metadata
+    one_object = bucket.objects.build("put_object_test.txt")
+    => #<Sndacs::Object:/beijing/put_object_test.txt>
+    one_object.content="labulabu"
+    one_object.save("x-snda-meta-mydata1"=>1,"x-snda-meta-mydata2"=>"mydata")
+    => true
+    one_object.content_type
+    => "text/plain"
+    one_object.metadata
+    => [["x-snda-meta-mydata1", ["1"]], ["x-snda-meta-mydata2", ["mydata"]]]
+
+=== Create an object by copy
+
+    one_object  # use object created above
+    => #<Sndacs::Object:/beijing/put_object_test.txt>
+    dest_bucket = service.buckets.find(dbucket_name)
+    dest_object = dest_bucket.objects.build(dobject_name)
+    dest_object.copy(:bucket=>one_object.bucket.name,:key=>one_object.key,:if_none_match=>'"6372c977391b20d2887e2d7c46c079bf0"',:replace=>false,"x-snda-meta-testcopy"=>"hicopy")
+    => true
+    dest_object.metadata
+    => [["x-snda-meta-mydata1", ["1"]], ["x-snda-meta-mydata2", ["mydata"]]]
+    dest_object.content_type
+    => "text/plain"
+    dest_object.etag
+    => "6fafe919441e179042702236e3c56b5d"
 
 Please note that new objects are created with "private" ACL by
 default.

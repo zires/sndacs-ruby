@@ -64,11 +64,13 @@ module Sndacs
       body = options.fetch(:body, nil)
       params = options.fetch(:params, {})
       headers = options.fetch(:headers, {})
-
+      subresource = options.fetch(:subresource,nil)
       # Must be done before adding params
       # Encodes all characters except forward-slash (/) and explicitly legal URL characters
       path = URI.escape(path, /[^#{URI::REGEXP::PATTERN::UNRESERVED}\/]/)
-
+      if subresource
+         path << "?#{subresource}"
+      end
       if params
         params = params.is_a?(String) ? params : self.class.parse_params(params)
 
@@ -147,7 +149,7 @@ module Sndacs
                           :x_snda_copy_source_if_none_match,
                           :x_snda_copy_source_if_unmodified_since,
                           :x_snda_copy_source_if_modified_since]
-
+      user_meta_data_prefix = "x-snda-meta-"
       parsed_headers = {}
       if headers
         headers.each do |key, value|
@@ -161,6 +163,12 @@ module Sndacs
             end
 
             parsed_headers[parsed_key] = parsed_value
+          else
+              parsed_key = key.to_s.gsub("_","-")
+              if parsed_key[0,user_meta_data_prefix.length] === user_meta_data_prefix
+                 parsed_headers[parsed_key] = value
+              end
+            
           end
         end
       end
@@ -179,6 +187,22 @@ module Sndacs
     end
 
     def http(host)
+  
+      if host.index("http://") === 0
+         start = "http://".size
+         host = host.slice(start,host.size-start)
+      end
+      
+      if host.index("https://") === 0
+         start = "https://".size
+         host = host.slice(start,host.size-start)
+      end
+      
+      endid = host.index("/")
+      if endid != nil
+         host = host.slice(0,endid)
+      end
+
       http = Net::HTTP.new(host, port, *proxy_settings)
       http.set_debug_output(STDOUT) if @debug
       http.use_ssl = @use_ssl
